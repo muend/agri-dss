@@ -4,8 +4,9 @@ export default function ControlPanel() {
   const { state, dispatch, triggerOptimization } = useContext(DSSContext);
   const { weights, cropId, telemetry, loading, error } = state;
   const handleSliderChange = (field, value) => {
-    const val = parseFloat(value);
-    dispatch({ type: 'UPDATE_WEIGHTS', payload: { [field]: val } });
+    // The reducer applies relative-scaling normalization, so a single
+    // {key, value} signal recalibrates the full vector to Σ = 1.0.
+    dispatch({ type: 'UPDATE_WEIGHTS', payload: { key: field, value } });
   };
   return (
     <div className="w-[30%] h-screen bg-paper border-r border-ink flex flex-col justify-between p-8 box-border select-none overflow-y-auto">
