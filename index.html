@@ -1,19 +1,418 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AGRI-DSS — Spatial Suitability Matrix Engine</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batı Antalya Tarımsal Kalkınma Rehberi — Karar Destek Sistemi</title>
+    <meta name="description" content="Batı Antalya (Demre, Finike, Kaş, Kemer, Kumluca) koridoru için veri-odaklı tarımsal karar destek sistemi. İlçe ve mahalle bazında sezonluk ürün, uzun vadeli yatırım ve pazar fırsatı tavsiyeleri.">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font Family -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+
+        /* Yazdırma stilleri (Muhtarlık panosu / kooperatif için A4) */
+        @media print {
+            .no-print { display: none !important; }
+
+            #print-content {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            @page { margin: 1cm; size: A4; }
+
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #ffffff;
+                color: #000000;
+                font-size: 10pt;
+            }
+
+            #bolgeTitle {
+                font-size: 14pt;
+                font-weight: bold;
+                color: #000;
+                text-align: center;
+                margin-bottom: 15px;
+            }
+
+            h3 {
+                font-size: 12pt;
+                border-bottom: 1px solid #000;
+                padding-bottom: 3px;
+                margin-top: 15px;
+                color: #000;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 8px;
+                table-layout: fixed;
+                word-wrap: break-word;
+            }
+
+            th, td {
+                border: 1px solid #000;
+                padding: 5px;
+                text-align: left;
+                font-size: 9pt;
+                vertical-align: top;
+            }
+
+            th { background-color: #eee; }
+
+            table thead tr th:nth-child(1) { width: 25%; }
+            table thead tr th:nth-child(2) { width: 15%; }
+            table thead tr th:nth-child(3) { width: 15%; }
+            table thead tr th:nth-child(4) { width: 45%; }
+
+            .print-badge {
+                background-color: transparent !important;
+                color: #000 !important;
+                border: 1px solid #999;
+                padding: 1px 3px;
+                border-radius: 3px;
+                font-weight: normal;
+                font-size: 8pt;
+                display: inline-block;
+                white-space: nowrap;
+            }
+
+            #longTermRecommendation, #market-gap-card {
+                background-color: #f5f5f5 !important;
+                border: 1px solid #ccc !important;
+                color: #000 !important;
+                padding: 8px;
+                font-size: 9pt;
+                margin-bottom: 15px;
+            }
+            #longTermRecommendation p:first-child, #market-gap-card h3 {
+                font-weight: bold;
+                font-size: 10pt;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="max-w-5xl mx-auto p-4 sm:p-8">
+
+        <!-- BAŞLIK -->
+        <header class="flex items-center justify-between mb-8 no-print">
+            <div class="flex items-center space-x-3">
+                <svg class="w-10 h-10 text-green-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 0a12.06 12.06 0 0 0 4.5 0m-8.25 0a12.06 12.06 0 0 0-4.5 0m12.75 0a12.06 12.06 0 0 1-4.5 0M4.135 10.61a3.75 3.75 0 0 1 5.74 0m8.25 0a3.75 3.75 0 0 0 5.74 0m-11.48.04a.75.75 0 0 0-1.06 0m13.6 0a.75.75 0 0 1-1.06 0m-5.25 0a.75.75 0 0 0-1.06 0m3.18-5.93a3.75 3.75 0 0 0-5.74 0" />
+                </svg>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-green-800 leading-tight">
+                        Batı Antalya Tarım Rehberi
+                    </h1>
+                    <p class="text-xs sm:text-sm text-gray-500 font-medium">Veri-Odaklı Tarımsal Karar Destek Sistemi</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- GİRİŞ KARTI (Bölge Seçimi) -->
+        <div id="input-card" class="bg-white p-6 rounded-lg shadow-lg mb-6 no-print">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Bölgenizi Seçin</h2>
+            <p class="text-sm text-gray-600 mb-5">
+                Konumunuza (İlçe ve Mahalle) göre bu sezon en yüksek verim ve kârı getirecek topraklı tarım ürünlerini ve uzun vadeli yatırım tavsiyelerini görmek için analiz yapın.
+                <span class="text-gray-400">(Bu prototip, bölgesel raporlardaki bilgilere dayalı kavramsal verilerle çalışmaktadır.)</span>
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <!-- İlçe Seçimi -->
+                <div>
+                    <label for="ilceSelect" class="block text-sm font-medium text-gray-700 mb-1">İlçe</label>
+                    <select id="ilceSelect" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
+                        <option value="">Lütfen ilçe seçin...</option>
+                    </select>
+                </div>
+                <!-- Mahalle Seçimi -->
+                <div>
+                    <label for="mahalleSelect" class="block text-sm font-medium text-gray-700 mb-1">Mahalle / Alt Bölge</label>
+                    <select id="mahalleSelect" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" disabled>
+                        <option value="">Önce ilçe seçin...</option>
+                    </select>
+                </div>
+                <!-- Hesapla Butonu -->
+                <div>
+                    <button id="hesaplaButton" class="w-full bg-green-600 text-white p-3 rounded-md font-semibold shadow-md hover:bg-green-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Analiz Yap
+                    </button>
+                </div>
+            </div>
+            <div id="loadingIndicator" class="hidden text-center mt-4">
+                <p class="text-green-600 font-medium">Veriler hesaplanıyor...</p>
+            </div>
+            <div id="dataError" class="hidden mt-4 p-3 bg-red-50 border border-red-300 text-red-700 text-sm rounded-md"></div>
+        </div>
+
+        <!-- SONUÇ ALANI -->
+        <div id="resultsArea" class="hidden">
+
+            <div class="w-full text-right mb-4 no-print">
+                <button id="printButton" class="bg-gray-700 text-white px-5 py-2 rounded-md font-medium hover:bg-gray-800 transition duration-200 flex items-center ml-auto">
+                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6 13.829m0 0c-.24.03-.48.062-.72.096m11.28 0c-.24.03-.48.062-.72.096m.72-.096A42.415 42.415 0 0 0 18 13.829m0 0c.24.03.48.062.72.096m-11.28 0c.24.03.48.062.72.096M16.5 12.094a42.58 42.58 0 0 1-9 0M3 10.5a1.5 1.5 0 0 1 1.5-1.5h15a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-15a1.5 1.5 0 0 1-1.5-1.5v-3Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m15 12-3-3m0 0-3 3m3-3v12" />
+                    </svg>
+                    Muhtarlık Panosu için Yazdır
+                </button>
+            </div>
+
+            <!-- YAZDIRILABİLİR İÇERİK -->
+            <div id="print-content" class="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
+                <h2 id="bolgeTitle" class="text-2xl font-bold text-gray-800 mb-6 text-center sm:text-left">
+                    Bölge Analizi
+                </h2>
+
+                <!-- 1. KISA VADELİ ÜRÜN TAVSİYELERİ -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-green-800 border-b-2 border-green-200 pb-2 mb-4">
+                        Bu Sezon için En Uygun Ürünler (Topraklı Tarım)
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ürün</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahmini Verim</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahmini Kârlılık</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sistem Notu / Gerekçe</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cropsTableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. UZUN VADELİ TAVSİYE -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-purple-800 border-b-2 border-purple-200 pb-2 mb-4">
+                        Uzun Vadeli Yatırım Tavsiyesi (Ağaç/Fidan)
+                    </h3>
+                    <div id="longTermRecommendation" class="bg-purple-50 p-5 rounded-md border-l-4 border-purple-400"></div>
+                </div>
+
+                <!-- 3. PAZAR ANALİZİ (KAVRAMSAL) -->
+                <div id="market-gap-card" class="bg-blue-50 border-l-4 border-blue-400 p-5 rounded-md">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-2">
+                        Gelecek Faz: Pazar Analizi ve Fırsatlar (Kavramsal)
+                    </h3>
+                    <p class="text-sm text-blue-700">
+                        Bu bölüm, sistemin gelecekteki aşamalarında gerçek pazar verileriyle çalışacaktır.
+                        Şu anda, bölgedeki potansiyel fırsatlara dayalı kavramsal bir öneri sunulmaktadır.
+                    </p>
+                    <p id="marketGapText" class="text-md text-blue-900 font-semibold mt-4"></p>
+                </div>
+
+                <p class="text-xs text-gray-400 mt-6 text-center">
+                    tarimsalkoridor.online · Batı Antalya Tarımsal Karar Destek Sistemi · Kavramsal Prototip
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* ════════════════════════════════════════════════════════════
+           BATI ANTALYA TARIMSAL KARAR DESTEK SİSTEMİ (DSS)
+
+           Mimari: Tamamen istemci-taraflı (client-side) statik site.
+           Veri  : data.json (cropSets + longTermCrops + regions)
+                   — kod ile veri ayrıdır; veri düzenlemek için yalnızca
+                   data.json'u değiştirmek yeterlidir.
+           Mantık: İlçe → Mahalle seçilir; sistem o bölge için sezonluk
+                   ürün setini, uzun vadeli yatırım ürününü ve kavramsal
+                   pazar açığını çözümleyip rapor olarak gösterir.
+           ════════════════════════════════════════════════════════════ */
+
+        let DB = null; // data.json içeriği (yüklenince doldurulur)
+
+        // --- DOM ELEMENTLERİ ---
+        const ilceSelect = document.getElementById('ilceSelect');
+        const mahalleSelect = document.getElementById('mahalleSelect');
+        const hesaplaButton = document.getElementById('hesaplaButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultsArea = document.getElementById('resultsArea');
+        const bolgeTitle = document.getElementById('bolgeTitle');
+        const cropsTableBody = document.getElementById('cropsTableBody');
+        const longTermRecommendation = document.getElementById('longTermRecommendation');
+        const marketGapText = document.getElementById('marketGapText');
+        const printButton = document.getElementById('printButton');
+        const dataError = document.getElementById('dataError');
+
+        // --- VERİ ÇÖZÜMLEME YARDIMCILARI ---
+        // Bir mahalle kaydını (referanslı/satır içi) tam veriye dönüştürür.
+        function resolveEntry(entry) {
+            const crops = entry.crops
+                ? entry.crops
+                : (DB.cropSets[entry.cropSet] || []);
+            const longTerm = entry.longTermCustom
+                ? entry.longTermCustom
+                : (DB.longTermCrops[entry.longTerm] || null);
+            return { crops, longTerm, marketGap: entry.marketGap };
+        }
+
+        // --- ETİKET RENKLENDİRME ---
+        function getYieldBadge(yieldText) {
+            let c = "print-badge ";
+            switch (yieldText) {
+                case "Çok Yüksek": c += "bg-green-100 text-green-800"; break;
+                case "Yüksek": c += "bg-green-100 text-green-700"; break;
+                case "Orta": c += "bg-yellow-100 text-yellow-800"; break;
+                case "Düşük": c += "bg-red-100 text-red-800"; break;
+                default: c += "bg-gray-100 text-gray-800";
+            }
+            return `<span class="px-3 py-1 rounded-full text-xs font-medium ${c}">${yieldText}</span>`;
+        }
+
+        function getProfitBadge(profitText) {
+            let c = "print-badge ";
+            switch (profitText) {
+                case "Çok Yüksek": c += "bg-blue-100 text-blue-800"; break;
+                case "Yüksek": c += "bg-blue-100 text-blue-700"; break;
+                case "Orta": c += "bg-yellow-100 text-yellow-800"; break;
+                case "Düşük": c += "bg-red-100 text-red-800"; break;
+                default: c += "bg-gray-100 text-gray-800";
+            }
+            return `<span class="px-3 py-1 rounded-full text-xs font-medium ${c}">${profitText}</span>`;
+        }
+
+        // --- DROPDOWN DOLDURMA ---
+        function populateIlceler() {
+            const ilceler = Object.keys(DB.regions).sort((a, b) => a.localeCompare(b, 'tr'));
+            ilceler.forEach(ilce => {
+                const opt = document.createElement('option');
+                opt.value = ilce;
+                opt.textContent = ilce;
+                ilceSelect.appendChild(opt);
+            });
+        }
+
+        function populateMahalleler() {
+            const ilce = ilceSelect.value;
+            mahalleSelect.innerHTML = '<option value="">Önce ilçe seçin...</option>';
+            mahalleSelect.disabled = true;
+            hesaplaButton.disabled = true;
+            resultsArea.classList.add('hidden');
+
+            if (ilce && DB.regions[ilce]) {
+                mahalleSelect.innerHTML = '<option value="">Lütfen mahalle seçin...</option>';
+                Object.keys(DB.regions[ilce])
+                    .sort((a, b) => a.localeCompare(b, 'tr'))
+                    .forEach(mahalle => {
+                        const opt = document.createElement('option');
+                        opt.value = mahalle;
+                        opt.textContent = mahalle;
+                        mahalleSelect.appendChild(opt);
+                    });
+                mahalleSelect.disabled = false;
+            }
+        }
+
+        function checkMahalleSelection() {
+            hesaplaButton.disabled = !mahalleSelect.value;
+            resultsArea.classList.add('hidden');
+        }
+
+        // --- ANALİZ / SONUÇ ---
+        function showResults() {
+            const ilce = ilceSelect.value;
+            const mahalle = mahalleSelect.value;
+            if (!ilce || !mahalle) return;
+
+            loadingIndicator.classList.remove('hidden');
+            resultsArea.classList.add('hidden');
+            hesaplaButton.disabled = true;
+
+            setTimeout(() => {
+                const raw = DB.regions[ilce] && DB.regions[ilce][mahalle];
+                const data = raw ? resolveEntry(raw) : {
+                    crops: [{ name: "Veri Yok", yield: "N/A", profit: "N/A", note: "Bu mahalle için henüz detaylı veri girişi yapılmamıştır." }],
+                    longTerm: null,
+                    marketGap: null
+                };
+
+                bolgeTitle.textContent = `Analiz Sonuçları: ${mahalle}, ${ilce}`;
+
+                // 1. Sezonluk ürünler
+                cropsTableBody.innerHTML = "";
+                if (data.crops && data.crops.length > 0) {
+                    data.crops.forEach(crop => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-normal"><div class="text-sm font-medium text-gray-900">${crop.name}</div></td>
+                            <td class="px-6 py-4 whitespace-nowrap">${getYieldBadge(crop.yield)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${getProfitBadge(crop.profit)}</td>
+                            <td class="px-6 py-4 whitespace-normal"><div class="text-sm text-gray-600">${crop.note}</div></td>
+                        `;
+                        cropsTableBody.appendChild(tr);
+                    });
+                } else {
+                    cropsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Bu bölge için kısa vadeli ürün önerisi bulunmamaktadır.</td></tr>`;
+                }
+
+                // 2. Uzun vadeli yatırım
+                if (data.longTerm && data.longTerm.name) {
+                    longTermRecommendation.innerHTML = `
+                        <p class="text-lg font-semibold text-purple-900">${data.longTerm.name}</p>
+                        <p class="text-sm text-purple-700 mt-1">${data.longTerm.note}</p>
+                    `;
+                } else {
+                    longTermRecommendation.innerHTML = `<p class="text-sm text-purple-700">Bu bölge için uzun vadeli yatırım tavsiyesi bulunmamaktadır.</p>`;
+                }
+
+                // 3. Pazar açığı
+                if (data.marketGap) {
+                    marketGapText.textContent = `Sistem (kavramsal olarak), pazar verilerine dayanarak bölgenizde '${data.marketGap}' ürünü veya alanı için bir talep artışı / arz açığı veya gelişim potansiyeli öngörmektedir.`;
+                } else {
+                    marketGapText.textContent = `Bu bölge için özel bir pazar fırsatı önerisi şu anda bulunmamaktadır. Genel pazar trendlerini takip ediniz.`;
+                }
+
+                loadingIndicator.classList.add('hidden');
+                resultsArea.classList.remove('hidden');
+                hesaplaButton.disabled = false;
+            }, 400);
+        }
+
+        // --- VERİYİ YÜKLE (data.json) ---
+        async function loadData() {
+            try {
+                const res = await fetch('./data.json', { cache: 'no-cache' });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                DB = await res.json();
+                populateIlceler();
+            } catch (err) {
+                dataError.textContent =
+                    'Veri dosyası (data.json) yüklenemedi. Sayfayı bir web sunucusu üzerinden açın ' +
+                    '(ör. "python3 -m http.server"). Hata: ' + err.message;
+                dataError.classList.remove('hidden');
+                ilceSelect.disabled = true;
+            }
+        }
+
+        // --- OLAY DİNLEYİCİLERİ ---
+        ilceSelect.addEventListener('change', populateMahalleler);
+        mahalleSelect.addEventListener('change', checkMahalleSelection);
+        hesaplaButton.addEventListener('click', showResults);
+        printButton.addEventListener('click', () => window.print());
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
 </html>
