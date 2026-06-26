@@ -1,101 +1,135 @@
-# Batı Antalya Tarımsal Kalkınma Rehberi (Agri-DSS)
+<div align="center">
 
-[![Durum](https://img.shields.io/badge/durum-prototip-green.svg)](https://tarimsalkoridor.online)
-[![Mimari](https://img.shields.io/badge/mimari-statik_site-blue.svg)](#mimari)
+# AGRI-DSS
 
-Batı Antalya (Demre, Finike, Kaş, Kemer, Kumluca) koridorundaki çiftçiler ve tarım
-yatırımcıları için **veri-odaklı bir Karar Destek Sistemi (Decision Support System – DSS)**.
+### A Decision Support System for Agricultural Planning in the Western Antalya Corridor
 
-**Canlı site:** https://tarimsalkoridor.online
+[![Status](https://img.shields.io/badge/status-prototype-0C8A3C.svg)](https://tarimsalkoridor.online)
+[![Architecture](https://img.shields.io/badge/architecture-static_client--side-13140F.svg)](#architecture)
+[![License](https://img.shields.io/badge/license-Apache--2.0-13140F.svg)](./LICENSE)
 
----
+**Live:** [tarimsalkoridor.online](https://tarimsalkoridor.online) · **Region:** Demre · Finike · Kaş · Kemer · Kumluca · **Envelope:** 36.18°N–37.12°N / 29.30°E–30.85°E
 
-## 1. Amaç ve Çözülen Problem
-
-### Problem: "Ortakların Trajedisi"
-Çiftçilerin birbirinden habersiz şekilde o an kârlı görünen ürüne (örn. domates) yönelmesi,
-hasat döneminde arz fazlasına, fiyatların maliyetin altına düşmesine ve çiftçinin zarar
-etmesine yol açar.
-
-### Çözüm: Veri-Odaklı Koordinasyon
-Sistem, her mahalle/parsel için kârlılığı optimize edecek ürünü önermeyi hedefler. Yalnızca
-toprağı ve iklimi değil; tahmini pazar fiyatlarını ve bölgedeki diğer üreticilerin
-eğilimlerini de (gelecek faz) dikkate alır.
+</div>
 
 ---
 
-## 2. Özellikler
+## What it is
 
-- **Dinamik bölge seçimi:** İlçe → Mahalle bazında filtreleme (5 ilçe, 147 mahalle).
-- **Sezonluk tavsiyeler:** Seçilen bölge için en uygun topraklı tarım ürünleri; her ürün için
-  tahmini verim, tahmini kârlılık ve agronomik/ekonomik gerekçe.
-- **Uzun vadeli yatırım tavsiyesi:** Bölgenin iklim ve arazi yapısına uygun ağaç/fidan önerisi
-  (avokado, zeytin, nar, badem, Finike portakalı vb.).
-- **Kavramsal pazar analizi:** Bölge için olası pazar açığı / fırsat öngörüsü.
-- **Yazdırılabilir rapor:** Analiz sonucu, muhtarlık panoları veya kooperatifler için A4
-  formatında yazdırılabilir.
+**Agri-DSS turns local agronomic and economic knowledge into a decision a farmer can act on.**
+Pick a district and a neighborhood, and the system returns a concrete, defensible plan: the
+seasonal crops most likely to deliver yield *and* profit, a long-term orchard/tree investment
+suited to the land, and an emerging market opportunity to watch — all printable on a single A4
+sheet for a village board or cooperative.
+
+It is built for the **Western Antalya agricultural corridor** (Demre, Finike, Kaş, Kemer,
+Kumluca): five districts, **147 neighborhoods**, each with a curated recommendation profile.
 
 ---
 
-## 3. Mimari
+## The problem it solves
 
-Sistem **tamamen istemci-taraflı (client-side) statik bir sitedir** — sunucu/backend gerekmez.
-Bu sayede GitHub Pages gibi statik barındırma üzerinde doğrudan çalışır.
+### Tragedy of the Commons in the field
+
+Farmers acting in isolation tend to plant whatever looked profitable *last* season — everyone
+plants tomatoes at once. The predictable result at harvest is **oversupply, a price collapse
+below cost, wasted produce, and a losing year** for the very growers who worked hardest.
+
+### Data-driven coordination
+
+Agri-DSS is designed to go beyond "what's the weather?" and "when do I fertilize?". Its goal is
+to recommend, for each neighborhood, the crop that **optimizes profitability** — weighing not
+only soil and climate but also expected market prices and (in a future phase) what other
+growers in the region are already planting. The question it answers:
+
+> *"If I plant this, will I get both high yield and a strong harvest-time price — and therefore
+> maximum profit?"*
+
+---
+
+## What it does
+
+- **Dynamic region selection** — filter by District → Neighborhood across a clean, guided flow.
+- **Seasonal recommendations** — the best soil-based crops for the selected area, each rated for
+  **estimated yield**, **estimated profitability**, and an **agronomic/economic rationale**.
+- **Long-term investment advice** — a tree/orchard crop matched to the land and climate
+  (avocado, olive, pomegranate, almond, geographically-protected Finike orange, and more).
+- **Conceptual market analysis** — an emerging demand / supply-gap opportunity for the area.
+- **Printable report** — a typographic A4 layout ready for village boards and cooperatives.
+
+---
+
+## Architecture
+
+Agri-DSS is a **fully client-side static site** — no backend, no build step. This makes it
+trivially hostable (GitHub Pages), instantly auditable, and impossible to break with a server
+outage.
 
 ```
-index.html   → Arayüz + tüm DSS mantığı (Tailwind CDN, vanilla JS)
-data.json    → Veri katmanı (kod ile veri ayrıdır)
-CNAME        → Özel alan adı (tarimsalkoridor.online)
+index.html   →  Interface + all DSS logic (custom Swiss-style UI, vanilla JS)
+data.json    →  Data layer — content is decoupled from code
+CNAME        →  Custom domain (tarimsalkoridor.online)
+LICENSE      →  Apache-2.0
 ```
 
-### Veri formatı (`data.json`)
-Veri, tekrarsız (DRY) bir yapıda tutulur:
+### Design
 
-- `cropSets` — yeniden kullanılan sezonluk ürün setleri (ör. `seraDomatesBiberSalatalik`).
-- `longTermCrops` — uzun vadeli yatırım ürünleri sözlüğü (ör. `avokado`, `zeytin`).
-- `regions` — İlçe → Mahalle → kayıt. Her kayıt:
-  - `cropSet` (set referansı) **veya** `crops` (satır içi özel liste)
-  - `longTerm` (referans) **veya** `longTermCustom` (satır içi özel ürün)
-  - `marketGap` (kavramsal pazar açığı metni)
+The interface follows the **Swiss / International Typographic Style**: a strict modular grid,
+strong typographic hierarchy (Archivo + Space Mono), generous negative space, and a single
+decisive accent — agricultural green on warm paper. The experience is interactive (guided
+stepper, corridor diagram, staggered result reveals, live counters) yet collapses to a clean,
+ink-on-white A4 document when printed.
 
-`index.html`, açılışta `data.json`'u `fetch` ile yükler ve bu referansları çözer.
-**Veriyi güncellemek için yalnızca `data.json` düzenlenir; koda dokunmak gerekmez.**
+### Data model (`data.json`)
+
+Data is stored in a compact, DRY structure so the catalogue can be edited without touching code:
+
+| Key | Purpose |
+|---|---|
+| `cropSets` | Reusable seasonal crop sets (e.g. `seraDomatesBiberSalatalik`) |
+| `longTermCrops` | Dictionary of long-term investment crops (e.g. `avokado`, `zeytin`) |
+| `regions` | District → Neighborhood → record |
+
+Each neighborhood record carries either a `cropSet` reference **or** an inline `crops` list;
+either a `longTerm` reference **or** an inline `longTermCustom`; plus a `marketGap` string.
+`index.html` fetches `data.json` on load and resolves these references at runtime.
+
+> **To update recommendations, edit `data.json` only — no code changes required.**
 
 ---
 
-## 4. Yerel Çalıştırma
+## Run locally
 
-`data.json` `fetch` ile yüklendiği için dosyayı çift tıklamak (`file://`) yerine basit bir
-web sunucusu kullanın:
+Because `data.json` is loaded via `fetch`, open the site through a web server rather than
+double-clicking the file:
 
 ```bash
-# Repo kökünde:
+# from the repo root:
 python3 -m http.server 8000
-# Tarayıcıda: http://localhost:8000
+# then open http://localhost:8000
 ```
 
 ---
 
-## 5. Yayınlama (GitHub Pages)
+## Deploy (GitHub Pages)
 
-1. Depoyu GitHub'a gönderin (`main` dalı).
-2. **Settings → Pages → Source: Deploy from a branch → `main` / `root`**.
-3. `CNAME` dosyası `tarimsalkoridor.online` alan adını bağlar; DNS kayıtlarının GitHub
-   Pages'e yönlendirildiğinden emin olun.
+1. Push to the `main` branch.
+2. **Settings → Pages → Source: Deploy from a branch → `main` / `root`.**
+3. The root `CNAME` binds `tarimsalkoridor.online`; point your DNS records at GitHub Pages.
 
-Build adımı yoktur — `index.html` ve `data.json` doğrudan yayınlanır.
-
----
-
-## 6. Veri Notu
-
-Mevcut veriler, bölgesel raporlara (ekonomi, çevre, arazi kullanımı, iklim) dayalı
-**kavramsal verilerdir**. İleride gerçek toprak/iklim/pazar veri kaynaklarıyla
-`data.json` değiştirilerek sistem üretim moduna taşınabilir.
+There is no build pipeline — `index.html` and `data.json` are published as-is.
 
 ---
 
-## 7. Lisans
+## Data note
 
-Bu proje **Apache-2.0** lisansı ile yayınlanmıştır. Ayrıntılar için depodaki
-[`LICENSE`](./LICENSE) dosyasına bakın.
+The current dataset is **conceptual**, derived from regional reports (economy, environment,
+land use, climate). It demonstrates the system's logic and interface. In production, the same
+`data.json` contract can be backed by real soil, climate, and market data sources — without any
+change to the application code.
+
+---
+
+## License
+
+Released under the **Apache-2.0** license. See [`LICENSE`](./LICENSE) for details.

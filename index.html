@@ -1,418 +1,548 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batı Antalya Tarımsal Kalkınma Rehberi — Karar Destek Sistemi</title>
-    <meta name="description" content="Batı Antalya (Demre, Finike, Kaş, Kemer, Kumluca) koridoru için veri-odaklı tarımsal karar destek sistemi. İlçe ve mahalle bazında sezonluk ürün, uzun vadeli yatırım ve pazar fırsatı tavsiyeleri.">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font Family -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batı Antalya Tarım Rehberi — Tarımsal Karar Destek Sistemi</title>
+<meta name="description" content="Batı Antalya (Demre, Finike, Kaş, Kemer, Kumluca) koridoru için veri-odaklı tarımsal karar destek sistemi. İlçe ve mahalle bazında sezonluk ürün, uzun vadeli yatırım ve pazar fırsatı analizi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F1EA;
+  --paper-2:#E9E8DF;
+  --ink:#13140F;
+  --muted:#6C6D63;
+  --accent:#0C8A3C;
+  --accent-deep:#075E29;
+  --rule:#13140F;
+  --hair:rgba(19,20,15,.16);
+  --col: 1fr;
+  --step: clamp(2px, .5vw, 6px);
+}
 
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f9fafb;
-        }
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Archivo', system-ui, sans-serif;
+  font-weight:400;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
 
-        /* Yazdırma stilleri (Muhtarlık panosu / kooperatif için A4) */
-        @media print {
-            .no-print { display: none !important; }
+/* fine vertical grid atmosphere */
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(100% / 12 - 1px),var(--hair) calc(100% / 12 - 1px),var(--hair) calc(100% / 12));
+  opacity:.35;mix-blend-mode:multiply}
 
-            #print-content {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
+.mono{font-family:'Space Mono',monospace}
+.up{text-transform:uppercase}
 
-            @page { margin: 1cm; size: A4; }
+/* crop / registration marks (print reference, Swiss) */
+.cropmark{position:fixed;width:22px;height:22px;z-index:5;pointer-events:none}
+.cropmark::before,.cropmark::after{content:"";position:absolute;background:var(--ink)}
+.cropmark::before{width:100%;height:1.5px;top:50%;transform:translateY(-50%)}
+.cropmark::after{height:100%;width:1.5px;left:50%;transform:translateX(-50%)}
+.cm-tl{top:14px;left:14px}.cm-tr{top:14px;right:14px}.cm-bl{bottom:14px;left:14px}.cm-br{bottom:14px;right:14px}
 
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #ffffff;
-                color: #000000;
-                font-size: 10pt;
-            }
+.wrap{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 clamp(20px,4vw,56px)}
 
-            #bolgeTitle {
-                font-size: 14pt;
-                font-weight: bold;
-                color: #000;
-                text-align: center;
-                margin-bottom: 15px;
-            }
+/* ── META BAR ─────────────────────────────────────────── */
+.metabar{display:flex;justify-content:space-between;align-items:center;gap:16px;
+  border-bottom:1.5px solid var(--rule);padding:14px 0;font-size:11px;letter-spacing:.08em}
+.metabar .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:7px;vertical-align:middle;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
 
-            h3 {
-                font-size: 12pt;
-                border-bottom: 1px solid #000;
-                padding-bottom: 3px;
-                margin-top: 15px;
-                color: #000;
-            }
+/* ── MASTHEAD ─────────────────────────────────────────── */
+.masthead{padding:clamp(34px,6vw,72px) 0 clamp(26px,4vw,44px);border-bottom:3px solid var(--rule);position:relative}
+.kicker{font-size:12px;letter-spacing:.32em;color:var(--accent-deep);margin-bottom:18px;display:flex;align-items:center;gap:14px}
+.kicker::after{content:"";flex:1;height:1.5px;background:var(--hair)}
+.title{font-weight:900;letter-spacing:-.035em;line-height:.9;text-transform:uppercase;
+  font-size:clamp(44px,11.5vw,150px);margin:0}
+.title .l2{color:var(--accent)}
+.subrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px;align-items:flex-end;margin-top:26px}
+.lede{max-width:46ch;font-size:clamp(14px,1.35vw,16.5px);color:#33342c}
+.lede b{font-weight:700}
+.idx{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.06em;color:var(--muted);text-align:right;line-height:1.7;white-space:nowrap}
+.idx span{color:var(--ink)}
 
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 8px;
-                table-layout: fixed;
-                word-wrap: break-word;
-            }
+/* reveal animation */
+.reveal{opacity:0;transform:translateY(22px);animation:rise .9s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
 
-            th, td {
-                border: 1px solid #000;
-                padding: 5px;
-                text-align: left;
-                font-size: 9pt;
-                vertical-align: top;
-            }
+/* ── CORRIDOR DIAGRAM ─────────────────────────────────── */
+.corridor{padding:26px 0;border-bottom:1.5px solid var(--rule)}
+.corridor h2,.section h2{margin:0}
+.eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;display:flex;gap:12px;align-items:baseline;margin-bottom:16px}
+.eyebrow b{color:var(--accent);font-weight:700}
+.corr-svg{width:100%;height:auto;display:block}
+.corr-node{cursor:default;transition:opacity .3s}
+.corr-dot{fill:var(--paper);stroke:var(--ink);stroke-width:2;transition:all .35s cubic-bezier(.16,1,.3,1)}
+.corr-label{font-family:'Space Mono',monospace;font-size:12px;fill:var(--muted);letter-spacing:.04em;transition:fill .3s}
+.corr-node.active .corr-dot{fill:var(--accent);stroke:var(--accent);r:11}
+.corr-node.active .corr-label{fill:var(--ink);font-weight:700}
 
-            th { background-color: #eee; }
+/* ── STEPPER ──────────────────────────────────────────── */
+.console{padding:clamp(28px,4vw,46px) 0;border-bottom:1.5px solid var(--rule)}
+.steps{display:flex;gap:0;margin-bottom:30px;flex-wrap:wrap}
+.step{flex:1;min-width:150px;border-top:3px solid var(--hair);padding-top:12px;transition:border-color .4s}
+.step .n{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.1em}
+.step .t{font-weight:700;text-transform:uppercase;letter-spacing:.02em;font-size:15px;margin-top:3px}
+.step.active{border-top-color:var(--accent)}
+.step.active .n,.step.done .n{color:var(--accent)}
+.step.done{border-top-color:var(--ink)}
 
-            table thead tr th:nth-child(1) { width: 25%; }
-            table thead tr th:nth-child(2) { width: 15%; }
-            table thead tr th:nth-child(3) { width: 15%; }
-            table thead tr th:nth-child(4) { width: 45%; }
+.controls{display:grid;grid-template-columns:1fr 1fr auto;gap:18px;align-items:end}
+.field label{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.select{position:relative}
+.select select{appearance:none;-webkit-appearance:none;width:100%;background:var(--paper);color:var(--ink);
+  border:1.5px solid var(--ink);border-radius:0;padding:15px 42px 15px 16px;
+  font-family:'Archivo',sans-serif;font-weight:600;font-size:16px;cursor:pointer;transition:background .2s,color .2s}
+.select select:disabled{color:var(--muted);border-color:var(--hair);cursor:not-allowed;background:var(--paper-2)}
+.select select:focus{outline:none;background:var(--ink);color:var(--paper)}
+.select::after{content:"";position:absolute;right:16px;top:50%;width:9px;height:9px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-65%) rotate(45deg);pointer-events:none;color:var(--ink)}
+.select:has(select:disabled)::after{color:var(--muted)}
+.select:has(select:focus)::after{color:var(--paper)}
 
-            .print-badge {
-                background-color: transparent !important;
-                color: #000 !important;
-                border: 1px solid #999;
-                padding: 1px 3px;
-                border-radius: 3px;
-                font-weight: normal;
-                font-size: 8pt;
-                display: inline-block;
-                white-space: nowrap;
-            }
+.btn{appearance:none;border:1.5px solid var(--accent);background:var(--accent);color:var(--paper);
+  font-family:'Space Mono',monospace;font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:13px;
+  padding:16px 28px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;overflow:hidden}
+.btn:hover:not(:disabled){background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{background:var(--paper-2);border-color:var(--hair);color:var(--muted);cursor:not-allowed}
+.btn:focus-visible{outline:3px solid var(--accent-deep);outline-offset:3px}
 
-            #longTermRecommendation, #market-gap-card {
-                background-color: #f5f5f5 !important;
-                border: 1px solid #ccc !important;
-                color: #000 !important;
-                padding: 8px;
-                font-size: 9pt;
-                margin-bottom: 15px;
-            }
-            #longTermRecommendation p:first-child, #market-gap-card h3 {
-                font-weight: bold;
-                font-size: 10pt;
-                margin-bottom: 5px;
-            }
-        }
-    </style>
+/* scan/loading */
+.scan{margin-top:22px;height:0;overflow:hidden;opacity:0;transition:opacity .25s}
+.scan.on{height:auto;opacity:1}
+.scan .bar{height:4px;background:var(--paper-2);position:relative;overflow:hidden}
+.scan .bar i{position:absolute;inset:0;background:var(--accent);transform-origin:left;transform:scaleX(0);animation:fill .6s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes fill{to{transform:scaleX(1)}}
+.scan .lbl{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-top:10px}
+
+.dataerr{margin-top:20px;border:1.5px solid #B42318;background:#FBEAE8;color:#7A271A;padding:14px 16px;font-family:'Space Mono',monospace;font-size:12.5px}
+
+/* ── RESULTS ──────────────────────────────────────────── */
+#report{display:none;padding:clamp(30px,5vw,56px) 0 18px}
+#report.on{display:block}
+.report-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:30px}
+.report-title{font-weight:900;text-transform:uppercase;letter-spacing:-.025em;line-height:.95;font-size:clamp(30px,5.5vw,62px);margin:0}
+.report-title em{font-style:normal;color:var(--accent)}
+.printbtn{appearance:none;background:var(--paper);border:1.5px solid var(--ink);color:var(--ink);
+  font-family:'Space Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:12px 18px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;transition:all .2s}
+.printbtn:hover{background:var(--ink);color:var(--paper)}
+.printbtn svg{width:16px;height:16px}
+
+/* summary strip */
+.summary{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--ink);margin-bottom:42px}
+.summary .cell{padding:18px 20px;border-right:1.5px solid var(--ink)}
+.summary .cell:last-child{border-right:0}
+.summary .k{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.summary .v{font-weight:800;font-size:clamp(20px,3vw,30px);line-height:1.05;letter-spacing:-.01em}
+.summary .v .unit{font-size:14px;color:var(--muted);font-weight:600}
+.summary .v.accent{color:var(--accent)}
+
+.section{padding:0 0 44px}
+.section h2{font-weight:800;text-transform:uppercase;letter-spacing:-.01em;font-size:clamp(19px,2.4vw,26px);
+  border-bottom:2px solid var(--ink);padding-bottom:12px;display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.section h2 .tag{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--accent);font-weight:700}
+
+/* crop table */
+.tbl{width:100%;border-collapse:collapse;margin-top:6px}
+.tbl thead th{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  text-align:left;font-weight:400;padding:14px 14px;border-bottom:1.5px solid var(--ink)}
+.tbl tbody td{padding:18px 14px;border-bottom:1px solid var(--hair);vertical-align:top}
+.tbl tbody tr{opacity:0;transform:translateY(14px)}
+.tbl tbody tr.in{animation:rise .7s cubic-bezier(.16,1,.3,1) forwards}
+.tbl tbody tr:hover{background:var(--paper-2)}
+.crop-name{font-weight:700;font-size:17px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px}
+.crop-name .ix{font-family:'Space Mono',monospace;font-size:12px;color:var(--accent);font-weight:700}
+.crop-note{color:#3c3d34;font-size:14px;max-width:54ch}
+.col-rank{width:34px}
+
+.chip{font-family:'Space Mono',monospace;font-weight:700;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  padding:6px 9px;border:1.5px solid var(--ink);display:inline-block;white-space:nowrap}
+.chip--max{background:var(--accent);color:var(--paper);border-color:var(--accent)}
+.chip--high{color:var(--accent-deep);border-color:var(--accent)}
+.chip--mid{color:var(--ink);border-color:var(--ink)}
+.chip--low{color:var(--muted);border-color:var(--muted);border-style:dashed}
+.chip--na{color:var(--muted);border-color:var(--hair)}
+
+/* long-term + market blocks */
+.block{border:1.5px solid var(--ink);padding:clamp(20px,3vw,30px);margin-top:6px;position:relative;background:var(--paper)}
+.block--lt{border-left:8px solid var(--accent)}
+.block--mk{border-left:8px solid var(--ink);background:var(--paper-2)}
+.block .lt-name{font-weight:900;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(24px,3.6vw,40px);line-height:.98;color:var(--accent-deep)}
+.block .lt-note{margin-top:12px;font-size:15.5px;color:#33342c;max-width:62ch}
+.block .mk-text{font-size:clamp(16px,2vw,20px);font-weight:600;line-height:1.4;max-width:60ch}
+.block .mk-sub{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
+.block .mk-text strong{color:var(--accent-deep);background:linear-gradient(transparent 62%, rgba(12,138,60,.22) 62%)}
+
+.report-foot{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;
+  border-top:1.5px solid var(--ink);padding:18px 0;text-align:center;margin-top:10px}
+
+/* footer */
+.foot{border-top:3px solid var(--rule);padding:34px 0;margin-top:30px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.foot a{color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--accent)}
+
+@media (max-width:720px){
+  .controls{grid-template-columns:1fr}
+  .summary{grid-template-columns:1fr}
+  .summary .cell{border-right:0;border-bottom:1.5px solid var(--ink)}
+  .summary .cell:last-child{border-bottom:0}
+  .col-rank{display:none}
+  .tbl thead{display:none}
+  .tbl tbody td{display:block;border-bottom:0;padding:6px 0}
+  .tbl tbody tr{border-bottom:1.5px solid var(--ink);padding:16px 0;display:block}
+  .crop-note{max-width:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .reveal,.tbl tbody tr{opacity:1!important;transform:none!important}
+}
+
+/* ── PRINT (A4, muhtarlık panosu) ─────────────────────── */
+@media print{
+  .bg-grid,.cropmark,.metabar,.masthead,.corridor,.console,.printbtn,.foot,.scan{display:none!important}
+  body{background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;font-size:10pt}
+  .wrap{max-width:100%;padding:0}
+  #report{display:block!important;padding:0}
+  .report-title{font-size:16pt;color:#000}
+  .report-title em{color:#000}
+  .summary{border:1px solid #000}
+  .summary .cell{border-color:#000}
+  .summary .v,.summary .v.accent{color:#000;font-size:13pt}
+  .section h2{font-size:12pt;border-color:#000}
+  .section h2 .tag{color:#000}
+  .tbl tbody tr{opacity:1!important;transform:none!important}
+  .tbl th,.tbl td{border:1px solid #000;font-size:9pt;padding:5px}
+  .chip{background:transparent!important;color:#000!important;border:1px solid #777!important;font-size:8pt;padding:1px 3px}
+  .block,.block--lt,.block--mk{border:1px solid #000;background:#f4f4f4!important}
+  .block .lt-name{color:#000;font-size:13pt}
+  .block .mk-text strong{background:none;color:#000}
+  @page{size:A4;margin:1.2cm}
+}
+</style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body>
+<div class="bg-grid"></div>
+<span class="cropmark cm-tl"></span><span class="cropmark cm-tr"></span>
+<span class="cropmark cm-bl"></span><span class="cropmark cm-br"></span>
 
-    <div class="max-w-5xl mx-auto p-4 sm:p-8">
+<div class="wrap">
 
-        <!-- BAŞLIK -->
-        <header class="flex items-center justify-between mb-8 no-print">
-            <div class="flex items-center space-x-3">
-                <svg class="w-10 h-10 text-green-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 0a12.06 12.06 0 0 0 4.5 0m-8.25 0a12.06 12.06 0 0 0-4.5 0m12.75 0a12.06 12.06 0 0 1-4.5 0M4.135 10.61a3.75 3.75 0 0 1 5.74 0m8.25 0a3.75 3.75 0 0 0 5.74 0m-11.48.04a.75.75 0 0 0-1.06 0m13.6 0a.75.75 0 0 1-1.06 0m-5.25 0a.75.75 0 0 0-1.06 0m3.18-5.93a3.75 3.75 0 0 0-5.74 0" />
-                </svg>
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-bold text-green-800 leading-tight">
-                        Batı Antalya Tarım Rehberi
-                    </h1>
-                    <p class="text-xs sm:text-sm text-gray-500 font-medium">Veri-Odaklı Tarımsal Karar Destek Sistemi</p>
-                </div>
-            </div>
-        </header>
+  <!-- META -->
+  <div class="metabar mono up">
+    <div><span class="dot"></span>AGRI-DSS — KARAR DESTEK SİSTEMİ</div>
+    <div id="metaRight">36.18°N–37.12°N / 29.30°E–30.85°E · EPSG:4326</div>
+  </div>
 
-        <!-- GİRİŞ KARTI (Bölge Seçimi) -->
-        <div id="input-card" class="bg-white p-6 rounded-lg shadow-lg mb-6 no-print">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">Bölgenizi Seçin</h2>
-            <p class="text-sm text-gray-600 mb-5">
-                Konumunuza (İlçe ve Mahalle) göre bu sezon en yüksek verim ve kârı getirecek topraklı tarım ürünlerini ve uzun vadeli yatırım tavsiyelerini görmek için analiz yapın.
-                <span class="text-gray-400">(Bu prototip, bölgesel raporlardaki bilgilere dayalı kavramsal verilerle çalışmaktadır.)</span>
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <!-- İlçe Seçimi -->
-                <div>
-                    <label for="ilceSelect" class="block text-sm font-medium text-gray-700 mb-1">İlçe</label>
-                    <select id="ilceSelect" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
-                        <option value="">Lütfen ilçe seçin...</option>
-                    </select>
-                </div>
-                <!-- Mahalle Seçimi -->
-                <div>
-                    <label for="mahalleSelect" class="block text-sm font-medium text-gray-700 mb-1">Mahalle / Alt Bölge</label>
-                    <select id="mahalleSelect" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" disabled>
-                        <option value="">Önce ilçe seçin...</option>
-                    </select>
-                </div>
-                <!-- Hesapla Butonu -->
-                <div>
-                    <button id="hesaplaButton" class="w-full bg-green-600 text-white p-3 rounded-md font-semibold shadow-md hover:bg-green-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                        Analiz Yap
-                    </button>
-                </div>
-            </div>
-            <div id="loadingIndicator" class="hidden text-center mt-4">
-                <p class="text-green-600 font-medium">Veriler hesaplanıyor...</p>
-            </div>
-            <div id="dataError" class="hidden mt-4 p-3 bg-red-50 border border-red-300 text-red-700 text-sm rounded-md"></div>
-        </div>
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div class="kicker mono up reveal" style="animation-delay:.05s">Batı Antalya Tarımsal Koridoru</div>
+    <h1 class="title">
+      <span class="reveal" style="display:block;animation-delay:.12s">Batı Antalya</span>
+      <span class="l2 reveal" style="display:block;animation-delay:.22s">Tarım Rehberi</span>
+    </h1>
+    <div class="subrow">
+      <p class="lede reveal" style="animation-delay:.34s">
+        <b>İlçe</b> ve <b>mahalle</b> bazında, bu sezon en yüksek verim ve kârı getirecek topraklı tarım ürünlerini,
+        uzun vadeli yatırım tavsiyelerini ve pazar fırsatlarını analiz eden veri-odaklı karar destek sistemi.
+        <span style="color:var(--muted)"> Bölgesel raporlara dayalı kavramsal verilerle çalışır.</span>
+      </p>
+      <div class="idx mono reveal" style="animation-delay:.42s">
+        İLÇE&nbsp;&nbsp;<span>05</span><br>
+        MAHALLE&nbsp;&nbsp;<span id="mahalleCount">147</span><br>
+        SÜRÜM&nbsp;&nbsp;<span>2.0</span>
+      </div>
+    </div>
+  </header>
 
-        <!-- SONUÇ ALANI -->
-        <div id="resultsArea" class="hidden">
+  <!-- CORRIDOR DIAGRAM -->
+  <section class="corridor">
+    <div class="eyebrow mono"><b>00</b> KORİDOR HARİTASI — BATI'DAN DOĞU'YA</div>
+    <svg class="corr-svg" viewBox="0 0 1000 96" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <line x1="60" y1="40" x2="940" y2="40" stroke="var(--hair)" stroke-width="2"/>
+      <g id="corrNodes"></g>
+    </svg>
+  </section>
 
-            <div class="w-full text-right mb-4 no-print">
-                <button id="printButton" class="bg-gray-700 text-white px-5 py-2 rounded-md font-medium hover:bg-gray-800 transition duration-200 flex items-center ml-auto">
-                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6 13.829m0 0c-.24.03-.48.062-.72.096m11.28 0c-.24.03-.48.062-.72.096m.72-.096A42.415 42.415 0 0 0 18 13.829m0 0c.24.03.48.062.72.096m-11.28 0c.24.03.48.062.72.096M16.5 12.094a42.58 42.58 0 0 1-9 0M3 10.5a1.5 1.5 0 0 1 1.5-1.5h15a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-15a1.5 1.5 0 0 1-1.5-1.5v-3Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 12a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m15 12-3-3m0 0-3 3m3-3v12" />
-                    </svg>
-                    Muhtarlık Panosu için Yazdır
-                </button>
-            </div>
-
-            <!-- YAZDIRILABİLİR İÇERİK -->
-            <div id="print-content" class="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
-                <h2 id="bolgeTitle" class="text-2xl font-bold text-gray-800 mb-6 text-center sm:text-left">
-                    Bölge Analizi
-                </h2>
-
-                <!-- 1. KISA VADELİ ÜRÜN TAVSİYELERİ -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-green-800 border-b-2 border-green-200 pb-2 mb-4">
-                        Bu Sezon için En Uygun Ürünler (Topraklı Tarım)
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ürün</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahmini Verim</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahmini Kârlılık</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sistem Notu / Gerekçe</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cropsTableBody" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 2. UZUN VADELİ TAVSİYE -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-semibold text-purple-800 border-b-2 border-purple-200 pb-2 mb-4">
-                        Uzun Vadeli Yatırım Tavsiyesi (Ağaç/Fidan)
-                    </h3>
-                    <div id="longTermRecommendation" class="bg-purple-50 p-5 rounded-md border-l-4 border-purple-400"></div>
-                </div>
-
-                <!-- 3. PAZAR ANALİZİ (KAVRAMSAL) -->
-                <div id="market-gap-card" class="bg-blue-50 border-l-4 border-blue-400 p-5 rounded-md">
-                    <h3 class="text-lg font-semibold text-blue-800 mb-2">
-                        Gelecek Faz: Pazar Analizi ve Fırsatlar (Kavramsal)
-                    </h3>
-                    <p class="text-sm text-blue-700">
-                        Bu bölüm, sistemin gelecekteki aşamalarında gerçek pazar verileriyle çalışacaktır.
-                        Şu anda, bölgedeki potansiyel fırsatlara dayalı kavramsal bir öneri sunulmaktadır.
-                    </p>
-                    <p id="marketGapText" class="text-md text-blue-900 font-semibold mt-4"></p>
-                </div>
-
-                <p class="text-xs text-gray-400 mt-6 text-center">
-                    tarimsalkoridor.online · Batı Antalya Tarımsal Karar Destek Sistemi · Kavramsal Prototip
-                </p>
-            </div>
-        </div>
-
+  <!-- CONSOLE / SELECTION -->
+  <section class="console">
+    <div class="steps" id="steps">
+      <div class="step" data-step="1"><div class="n mono">01</div><div class="t">İlçe Seçimi</div></div>
+      <div class="step" data-step="2"><div class="n mono">02</div><div class="t">Mahalle Seçimi</div></div>
+      <div class="step" data-step="3"><div class="n mono">03</div><div class="t">Analiz</div></div>
     </div>
 
-    <script>
-        /* ════════════════════════════════════════════════════════════
-           BATI ANTALYA TARIMSAL KARAR DESTEK SİSTEMİ (DSS)
+    <div class="controls">
+      <div class="field">
+        <label for="ilceSelect">İlçe</label>
+        <div class="select"><select id="ilceSelect"><option value="">Lütfen ilçe seçin…</option></select></div>
+      </div>
+      <div class="field">
+        <label for="mahalleSelect">Mahalle / Alt Bölge</label>
+        <div class="select"><select id="mahalleSelect" disabled><option value="">Önce ilçe seçin…</option></select></div>
+      </div>
+      <button id="hesaplaButton" class="btn" disabled>Analiz Yap →</button>
+    </div>
 
-           Mimari: Tamamen istemci-taraflı (client-side) statik site.
-           Veri  : data.json (cropSets + longTermCrops + regions)
-                   — kod ile veri ayrıdır; veri düzenlemek için yalnızca
-                   data.json'u değiştirmek yeterlidir.
-           Mantık: İlçe → Mahalle seçilir; sistem o bölge için sezonluk
-                   ürün setini, uzun vadeli yatırım ürününü ve kavramsal
-                   pazar açığını çözümleyip rapor olarak gösterir.
-           ════════════════════════════════════════════════════════════ */
+    <div class="scan" id="scan">
+      <div class="bar"><i></i></div>
+      <div class="lbl mono" id="scanLbl">TOPRAK pH · EĞİM · HİDROGRAFİ · İKLİM · PAZAR</div>
+    </div>
+    <div class="dataerr" id="dataError" style="display:none"></div>
+  </section>
 
-        let DB = null; // data.json içeriği (yüklenince doldurulur)
+  <!-- REPORT -->
+  <section id="report">
+    <div class="report-head">
+      <h1 class="report-title" id="bolgeTitle">Bölge Analizi</h1>
+      <button class="printbtn" id="printButton" title="A4 olarak yazdır">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6M6 18H4v-5a2 2 0 012-2h12a2 2 0 012 2v5h-2M6 14h12v7H6z"/></svg>
+        Yazdır
+      </button>
+    </div>
 
-        // --- DOM ELEMENTLERİ ---
-        const ilceSelect = document.getElementById('ilceSelect');
-        const mahalleSelect = document.getElementById('mahalleSelect');
-        const hesaplaButton = document.getElementById('hesaplaButton');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const resultsArea = document.getElementById('resultsArea');
-        const bolgeTitle = document.getElementById('bolgeTitle');
-        const cropsTableBody = document.getElementById('cropsTableBody');
-        const longTermRecommendation = document.getElementById('longTermRecommendation');
-        const marketGapText = document.getElementById('marketGapText');
-        const printButton = document.getElementById('printButton');
-        const dataError = document.getElementById('dataError');
+    <div class="summary" id="summary">
+      <div class="cell"><div class="k mono">Sezonluk Ürün</div><div class="v"><span id="sumCount">0</span> <span class="unit">öneri</span></div></div>
+      <div class="cell"><div class="k mono">Yüksek Kâr Potansiyeli</div><div class="v accent"><span id="sumProfit">0</span><span class="unit">/<span id="sumTotal">0</span> ürün</span></div></div>
+      <div class="cell"><div class="k mono">Uzun Vadeli Yatırım</div><div class="v" id="sumLong" style="font-size:clamp(16px,2.2vw,22px)">—</div></div>
+    </div>
 
-        // --- VERİ ÇÖZÜMLEME YARDIMCILARI ---
-        // Bir mahalle kaydını (referanslı/satır içi) tam veriye dönüştürür.
-        function resolveEntry(entry) {
-            const crops = entry.crops
-                ? entry.crops
-                : (DB.cropSets[entry.cropSet] || []);
-            const longTerm = entry.longTermCustom
-                ? entry.longTermCustom
-                : (DB.longTermCrops[entry.longTerm] || null);
-            return { crops, longTerm, marketGap: entry.marketGap };
-        }
+    <div class="section">
+      <h2>Bu Sezon İçin En Uygun Ürünler <span class="tag mono">A · TOPRAKLI TARIM</span></h2>
+      <table class="tbl">
+        <thead><tr>
+          <th class="col-rank">#</th><th>Ürün</th><th>Tahmini Verim</th><th>Tahmini Kârlılık</th><th>Sistem Notu / Gerekçe</th>
+        </tr></thead>
+        <tbody id="cropsTableBody"></tbody>
+      </table>
+    </div>
 
-        // --- ETİKET RENKLENDİRME ---
-        function getYieldBadge(yieldText) {
-            let c = "print-badge ";
-            switch (yieldText) {
-                case "Çok Yüksek": c += "bg-green-100 text-green-800"; break;
-                case "Yüksek": c += "bg-green-100 text-green-700"; break;
-                case "Orta": c += "bg-yellow-100 text-yellow-800"; break;
-                case "Düşük": c += "bg-red-100 text-red-800"; break;
-                default: c += "bg-gray-100 text-gray-800";
-            }
-            return `<span class="px-3 py-1 rounded-full text-xs font-medium ${c}">${yieldText}</span>`;
-        }
+    <div class="section">
+      <h2>Uzun Vadeli Yatırım Tavsiyesi <span class="tag mono">B · AĞAÇ / FİDAN</span></h2>
+      <div class="block block--lt" id="longTermRecommendation"></div>
+    </div>
 
-        function getProfitBadge(profitText) {
-            let c = "print-badge ";
-            switch (profitText) {
-                case "Çok Yüksek": c += "bg-blue-100 text-blue-800"; break;
-                case "Yüksek": c += "bg-blue-100 text-blue-700"; break;
-                case "Orta": c += "bg-yellow-100 text-yellow-800"; break;
-                case "Düşük": c += "bg-red-100 text-red-800"; break;
-                default: c += "bg-gray-100 text-gray-800";
-            }
-            return `<span class="px-3 py-1 rounded-full text-xs font-medium ${c}">${profitText}</span>`;
-        }
+    <div class="section">
+      <h2>Pazar Analizi ve Fırsatlar <span class="tag mono">C · KAVRAMSAL</span></h2>
+      <div class="block block--mk">
+        <div class="mk-sub mono">Gelecek faz — gerçek pazar verileriyle çalışacaktır</div>
+        <p class="mk-text" id="marketGapText"></p>
+      </div>
+    </div>
 
-        // --- DROPDOWN DOLDURMA ---
-        function populateIlceler() {
-            const ilceler = Object.keys(DB.regions).sort((a, b) => a.localeCompare(b, 'tr'));
-            ilceler.forEach(ilce => {
-                const opt = document.createElement('option');
-                opt.value = ilce;
-                opt.textContent = ilce;
-                ilceSelect.appendChild(opt);
-            });
-        }
+    <div class="report-foot mono">tarimsalkoridor.online · Batı Antalya Tarımsal Karar Destek Sistemi · Kavramsal Prototip</div>
+  </section>
 
-        function populateMahalleler() {
-            const ilce = ilceSelect.value;
-            mahalleSelect.innerHTML = '<option value="">Önce ilçe seçin...</option>';
-            mahalleSelect.disabled = true;
-            hesaplaButton.disabled = true;
-            resultsArea.classList.add('hidden');
+  <!-- FOOTER -->
+  <footer class="foot mono up">
+    <div>© <span id="yr"></span> Agri-DSS · Apache-2.0</div>
+    <div><a href="https://tarimsalkoridor.online">tarimsalkoridor.online</a></div>
+  </footer>
 
-            if (ilce && DB.regions[ilce]) {
-                mahalleSelect.innerHTML = '<option value="">Lütfen mahalle seçin...</option>';
-                Object.keys(DB.regions[ilce])
-                    .sort((a, b) => a.localeCompare(b, 'tr'))
-                    .forEach(mahalle => {
-                        const opt = document.createElement('option');
-                        opt.value = mahalle;
-                        opt.textContent = mahalle;
-                        mahalleSelect.appendChild(opt);
-                    });
-                mahalleSelect.disabled = false;
-            }
-        }
+</div>
 
-        function checkMahalleSelection() {
-            hesaplaButton.disabled = !mahalleSelect.value;
-            resultsArea.classList.add('hidden');
-        }
+<script>
+/* ════════════════════════════════════════════════════════════
+   BATI ANTALYA TARIMSAL KARAR DESTEK SİSTEMİ — Swiss UI
+   Mantık ve veri (data.json) korunmuştur; yalnızca sunum katmanı
+   yeniden tasarlanmıştır. İlçe→Mahalle→Analiz akışı, sezonluk ürün
+   tablosu, uzun vadeli yatırım, kavramsal pazar açığı ve A4 yazdırma.
+   ════════════════════════════════════════════════════════════ */
+let DB = null;
+const $ = (id) => document.getElementById(id);
+const ilceSelect=$('ilceSelect'), mahalleSelect=$('mahalleSelect'), hesaplaButton=$('hesaplaButton'),
+      report=$('report'), bolgeTitle=$('bolgeTitle'), cropsTableBody=$('cropsTableBody'),
+      longTermRecommendation=$('longTermRecommendation'), marketGapText=$('marketGapText'),
+      printButton=$('printButton'), dataError=$('dataError'), scan=$('scan'),
+      stepsEl=$('steps');
 
-        // --- ANALİZ / SONUÇ ---
-        function showResults() {
-            const ilce = ilceSelect.value;
-            const mahalle = mahalleSelect.value;
-            if (!ilce || !mahalle) return;
+// Coğrafi sıra (batı → doğu)
+const CORRIDOR_ORDER = ['Kaş','Demre','Finike','Kumluca','Kemer'];
 
-            loadingIndicator.classList.remove('hidden');
-            resultsArea.classList.add('hidden');
-            hesaplaButton.disabled = true;
+$('yr').textContent = new Date().getFullYear();
 
-            setTimeout(() => {
-                const raw = DB.regions[ilce] && DB.regions[ilce][mahalle];
-                const data = raw ? resolveEntry(raw) : {
-                    crops: [{ name: "Veri Yok", yield: "N/A", profit: "N/A", note: "Bu mahalle için henüz detaylı veri girişi yapılmamıştır." }],
-                    longTerm: null,
-                    marketGap: null
-                };
+/* ── Veri çözümleme ── */
+function resolveEntry(e){
+  const crops = e.crops ? e.crops : (DB.cropSets[e.cropSet] || []);
+  const longTerm = e.longTermCustom ? e.longTermCustom : (DB.longTermCrops[e.longTerm] || null);
+  return { crops, longTerm, marketGap: e.marketGap };
+}
+function levelKey(t){
+  if(!t) return 'na';
+  if(t.includes('Çok Yüksek')) return 'max';
+  if(t.includes('Yüksek')) return 'high';
+  if(t.includes('Orta')) return 'mid';
+  if(t.includes('Düşük')) return 'low';
+  return 'na';
+}
+function chip(t){ return `<span class="chip chip--${levelKey(t)}">${t}</span>`; }
 
-                bolgeTitle.textContent = `Analiz Sonuçları: ${mahalle}, ${ilce}`;
+/* ── Stepper ── */
+function setStep(n){ // 1=ilçe,2=mahalle,3=analiz aşamasında
+  [...stepsEl.children].forEach((el)=>{
+    const s = +el.dataset.step;
+    el.classList.toggle('done', s < n);
+    el.classList.toggle('active', s === n);
+  });
+}
 
-                // 1. Sezonluk ürünler
-                cropsTableBody.innerHTML = "";
-                if (data.crops && data.crops.length > 0) {
-                    data.crops.forEach(crop => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td class="px-6 py-4 whitespace-normal"><div class="text-sm font-medium text-gray-900">${crop.name}</div></td>
-                            <td class="px-6 py-4 whitespace-nowrap">${getYieldBadge(crop.yield)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">${getProfitBadge(crop.profit)}</td>
-                            <td class="px-6 py-4 whitespace-normal"><div class="text-sm text-gray-600">${crop.note}</div></td>
-                        `;
-                        cropsTableBody.appendChild(tr);
-                    });
-                } else {
-                    cropsTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">Bu bölge için kısa vadeli ürün önerisi bulunmamaktadır.</td></tr>`;
-                }
+/* ── Koridor diyagramı ── */
+function buildCorridor(){
+  const g = $('corrNodes'); const n = CORRIDOR_ORDER.length;
+  const x0=60, x1=940, span=(x1-x0)/(n-1);
+  CORRIDOR_ORDER.forEach((name,i)=>{
+    const x = x0 + i*span;
+    const node = document.createElementNS('http://www.w3.org/2000/svg','g');
+    node.setAttribute('class','corr-node'); node.dataset.ilce=name;
+    node.innerHTML =
+      `<circle class="corr-dot" cx="${x}" cy="40" r="7"></circle>`+
+      `<text class="corr-label" x="${x}" y="78" text-anchor="middle">${name}</text>`;
+    g.appendChild(node);
+  });
+}
+function highlightCorridor(ilce){
+  document.querySelectorAll('.corr-node').forEach(nd=>{
+    nd.classList.toggle('active', nd.dataset.ilce===ilce);
+  });
+}
 
-                // 2. Uzun vadeli yatırım
-                if (data.longTerm && data.longTerm.name) {
-                    longTermRecommendation.innerHTML = `
-                        <p class="text-lg font-semibold text-purple-900">${data.longTerm.name}</p>
-                        <p class="text-sm text-purple-700 mt-1">${data.longTerm.note}</p>
-                    `;
-                } else {
-                    longTermRecommendation.innerHTML = `<p class="text-sm text-purple-700">Bu bölge için uzun vadeli yatırım tavsiyesi bulunmamaktadır.</p>`;
-                }
+/* ── Dropdownlar ── */
+function populateIlceler(){
+  Object.keys(DB.regions).sort((a,b)=>a.localeCompare(b,'tr')).forEach(ilce=>{
+    const o=document.createElement('option'); o.value=ilce; o.textContent=ilce; ilceSelect.appendChild(o);
+  });
+}
+function onIlceChange(){
+  const ilce = ilceSelect.value;
+  mahalleSelect.innerHTML = '<option value="">Önce ilçe seçin…</option>';
+  mahalleSelect.disabled = true; hesaplaButton.disabled = true; hideReport();
+  highlightCorridor(ilce);
+  if(ilce && DB.regions[ilce]){
+    mahalleSelect.innerHTML = '<option value="">Lütfen mahalle seçin…</option>';
+    Object.keys(DB.regions[ilce]).sort((a,b)=>a.localeCompare(b,'tr')).forEach(m=>{
+      const o=document.createElement('option'); o.value=m; o.textContent=m; mahalleSelect.appendChild(o);
+    });
+    mahalleSelect.disabled=false; setStep(2);
+  } else { setStep(1); }
+}
+function onMahalleChange(){
+  hesaplaButton.disabled = !mahalleSelect.value;
+  hideReport();
+  setStep(mahalleSelect.value ? 3 : 2);
+}
 
-                // 3. Pazar açığı
-                if (data.marketGap) {
-                    marketGapText.textContent = `Sistem (kavramsal olarak), pazar verilerine dayanarak bölgenizde '${data.marketGap}' ürünü veya alanı için bir talep artışı / arz açığı veya gelişim potansiyeli öngörmektedir.`;
-                } else {
-                    marketGapText.textContent = `Bu bölge için özel bir pazar fırsatı önerisi şu anda bulunmamaktadır. Genel pazar trendlerini takip ediniz.`;
-                }
+function hideReport(){ report.classList.remove('on'); }
 
-                loadingIndicator.classList.add('hidden');
-                resultsArea.classList.remove('hidden');
-                hesaplaButton.disabled = false;
-            }, 400);
-        }
+/* ── Sayaç animasyonu ── */
+function countUp(el,to,ms=650){
+  const start=performance.now(), from=0;
+  function tick(now){
+    const p=Math.min(1,(now-start)/ms);
+    const e=1-Math.pow(1-p,3);
+    el.textContent = Math.round(from+(to-from)*e);
+    if(p<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
 
-        // --- VERİYİ YÜKLE (data.json) ---
-        async function loadData() {
-            try {
-                const res = await fetch('./data.json', { cache: 'no-cache' });
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                DB = await res.json();
-                populateIlceler();
-            } catch (err) {
-                dataError.textContent =
-                    'Veri dosyası (data.json) yüklenemedi. Sayfayı bir web sunucusu üzerinden açın ' +
-                    '(ör. "python3 -m http.server"). Hata: ' + err.message;
-                dataError.classList.remove('hidden');
-                ilceSelect.disabled = true;
-            }
-        }
+/* ── Analiz ── */
+function showResults(){
+  const ilce=ilceSelect.value, mahalle=mahalleSelect.value;
+  if(!ilce||!mahalle) return;
+  hesaplaButton.disabled=true; hideReport();
+  scan.classList.add('on');
+  const bar = scan.querySelector('.bar i'); bar.style.animation='none'; void bar.offsetWidth; bar.style.animation='';
 
-        // --- OLAY DİNLEYİCİLERİ ---
-        ilceSelect.addEventListener('change', populateMahalleler);
-        mahalleSelect.addEventListener('change', checkMahalleSelection);
-        hesaplaButton.addEventListener('click', showResults);
-        printButton.addEventListener('click', () => window.print());
-        document.addEventListener('DOMContentLoaded', loadData);
-    </script>
+  setTimeout(()=>{
+    const raw = DB.regions[ilce] && DB.regions[ilce][mahalle];
+    const data = raw ? resolveEntry(raw) : {
+      crops:[{name:'Veri Yok',yield:'N/A',profit:'N/A',note:'Bu mahalle için henüz detaylı veri girişi yapılmamıştır.'}],
+      longTerm:null, marketGap:null
+    };
+
+    bolgeTitle.innerHTML = `<em>${mahalle}</em>, ${ilce}`;
+
+    // Tablo
+    cropsTableBody.innerHTML='';
+    const crops = data.crops || [];
+    crops.forEach((c,i)=>{
+      const tr=document.createElement('tr');
+      tr.style.animationDelay=(0.06*i)+'s';
+      tr.innerHTML =
+        `<td class="col-rank mono" style="color:var(--accent);font-weight:700">${String(i+1).padStart(2,'0')}</td>`+
+        `<td><div class="crop-name">${c.name}</div></td>`+
+        `<td>${chip(c.yield)}</td>`+
+        `<td>${chip(c.profit)}</td>`+
+        `<td><div class="crop-note">${c.note}</div></td>`;
+      cropsTableBody.appendChild(tr);
+      requestAnimationFrame(()=>tr.classList.add('in'));
+    });
+    if(crops.length===0){
+      cropsTableBody.innerHTML='<tr class="in"><td colspan="5" style="color:var(--muted);padding:22px 14px">Bu bölge için kısa vadeli ürün önerisi bulunmamaktadır.</td></tr>';
+    }
+
+    // Özet
+    const profitHigh = crops.filter(c=>['max','high'].includes(levelKey(c.profit))).length;
+    $('sumTotal').textContent = crops.length;
+    countUp($('sumCount'), crops.length);
+    countUp($('sumProfit'), profitHigh);
+    $('sumLong').textContent = data.longTerm && data.longTerm.name ? data.longTerm.name : '—';
+
+    // Uzun vade
+    if(data.longTerm && data.longTerm.name){
+      longTermRecommendation.innerHTML =
+        `<div class="lt-name">${data.longTerm.name}</div><p class="lt-note">${data.longTerm.note}</p>`;
+    } else {
+      longTermRecommendation.innerHTML = `<p class="lt-note">Bu bölge için uzun vadeli yatırım tavsiyesi bulunmamaktadır.</p>`;
+    }
+
+    // Pazar
+    marketGapText.innerHTML = data.marketGap
+      ? `Sistem, pazar verilerine dayanarak bölgenizde <strong>${data.marketGap}</strong> ürünü veya alanı için bir talep artışı / arz açığı ya da gelişim potansiyeli öngörmektedir.`
+      : `Bu bölge için özel bir pazar fırsatı önerisi şu anda bulunmamaktadır. Genel pazar trendlerini takip ediniz.`;
+
+    scan.classList.remove('on');
+    report.classList.add('on');
+    hesaplaButton.disabled=false;
+    report.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 640);
+}
+
+/* ── Veri yükle ── */
+async function loadData(){
+  try{
+    const res = await fetch('./data.json',{cache:'no-cache'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    DB = await res.json();
+    buildCorridor();
+    populateIlceler();
+    let n=0; for(const i of Object.keys(DB.regions)) n+=Object.keys(DB.regions[i]).length;
+    $('mahalleCount').textContent=n; $('sumTotal').textContent=0;
+    setStep(1);
+  }catch(err){
+    dataError.style.display='block';
+    dataError.textContent='Veri dosyası (data.json) yüklenemedi. Sayfayı bir web sunucusu üzerinden açın (ör. "python3 -m http.server"). Hata: '+err.message;
+    ilceSelect.disabled=true;
+  }
+}
+
+ilceSelect.addEventListener('change', onIlceChange);
+mahalleSelect.addEventListener('change', onMahalleChange);
+hesaplaButton.addEventListener('click', showResults);
+printButton.addEventListener('click', ()=>window.print());
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
 </body>
 </html>
